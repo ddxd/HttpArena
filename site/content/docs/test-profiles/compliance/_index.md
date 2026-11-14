@@ -42,15 +42,18 @@ Each suite runs against a fresh container, with the tools pinned in `scripts/spe
   "framework": "aspnet-minimal",
   "dir": "aspnet-minimal",
   "suites": {
-    "h1": {"tool": "http11probe", "version": "d50d818", "passed": 144, "total": 159, "warnings": 19, "failed": ["COMP-OPTIONS-STAR", "..."]},
+    "h1": {"tool": "http11probe", "version": "d50d818", "passed": 144, "total": 159, "warnings": 19,
+           "failed": [{"id": "RFC9112-6.1-CL-PLUS-SIGN", "test": "Content-Length with plus sign must be rejected",
+                       "rfc": "RFC 9112 §6.1", "level": "Must", "expected": "400 or close",
+                       "got": "200, connection left open"}, "..."]},
     "h2": {"tool": "h2spec", "version": "2.6.0", "passed": 146, "total": 146, "failed": [],
            "listeners": {"tls": {"passed": 146, "total": 146, "failed": []}, "h2c": {"passed": 146, "total": 146, "failed": []}}},
-    "h3": {"tool": "h3spec", "version": "v0.1.15", "passed": 43, "total": 85, "failed": ["..."]}
+    "h3": {"tool": "h3spec", "version": "v0.1.15", "passed": 43, "total": 85, "failed": [{"id": "...", "got": "..."}]}
   }
 }
 ```
 
-- **`passed` out of `total`**, and the IDs of the tests that failed, for every suite the entry lists.
+- **`passed` out of `total`** for every suite the entry lists, and in `failed` one record per failed test: its `id`, what it checks (`test`), what the tool `expected` and what the server did (`got`), with the RFC section and level where the tool gives them. The raw output stays on the machine that ran the suite, so this is what explains a failure: the `/spec` and `/benchmark` comments list it in a table per suite, and the entry's page on the site has a "Protocol compliance" section with the same tables, linked from its Spec cell.
 - **`h1`** counts the probe's scored tests. A warning - the RFC allows both the strict and the lenient behaviour - counts as passed.
 - **`h2`** is scored on each HTTP/2 listener the entry runs; the score is the weaker of the two, and both are kept under `listeners`.
 - **`h3`** leaves out the tests h3spec reports as pending (0-RTT, extra streams it could not open).
@@ -58,7 +61,7 @@ Each suite runs against a fresh container, with the tools pinned in `scripts/spe
 - **`error`** in place of a score means the suite could not be measured at all - the server never came up, or the WebSocket handshake was refused on every case. It is not a score of zero.
 - **`crashed`** means the server stopped running during the suite. The tests it could no longer answer count as failed.
 
-The board columns that read these files are still to come.
+On the board, the score is the Spec column of the H/1.1, H/2, H/3 and WebSocket views, right after the composite: the share of the suite passed, with passed out of total under it and the tool, failures and any crash in its tooltip. It sorts like any other column and is never part of the composite. Entries that share a display name are joined there: aspnet-minimal's WebSocket score comes from `aspnet-websocket.json`. If two of them run the same suite, the weaker score is shown. A dot means the entry does not run the suite, and a dash that it could not be measured.
 
 {{< cards >}}
   {{< card link="implementation" title="Implementation" subtitle="The /spec contract: methods, ports, bodies, the header echo, and why each part exists." icon="code" >}}
